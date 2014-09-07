@@ -22,18 +22,67 @@
 
 var game = new Phaser.Game(800, 600, Phaser.AUTO, 'phaser-example', { preload: preload, create: create, update: update });
 
+var Bear = function(game, x, y, frame) {
+
+    Phaser.Sprite.call(this, game, x, y, 'bear', frame);
+
+    this.game.physics.arcade.enableBody(this);
+
+    this.body.collideWorldBounds = true;
+    this.body.gravity.y = 600;
+    this.body.maxVelocity = 1000;
+
+    this.animations.add('left', [0, 1], 10, true);
+    this.animations.add('right', [0, 1], 10, true);
+    this.anchor.setTo(.5);
+    this.body.drag.x = 800;
+
+};
+
+Bear.prototype = Object.create(Phaser.Sprite.prototype);
+Bear.prototype.constructor = Bear;
+
+  // RIGHT MOVEMENT
+Bear.prototype.runRight = function(){
+  this.body.drag.x = 200;
+  this.body.velocity.x = 400;
+  this.scale.x = 1;
+  this.animations.play('right');
+};
+  // LEFT MOVEMENT
+Bear.prototype.runLeft = function(){
+  this.body.drag.x = 200;
+  this.body.velocity.x = -400;
+  this.scale.x = -1;
+  this.animations.play('left');
+};
+  //JUMPING
+Bear.prototype.jump = function(){
+    this.body.velocity.y = -600;
+};
+
+Bear.prototype.stop = function(){
+    this.body.drag.x = 200;
+    this.animations.stop();
+    this.frame = 2;
+}
+
+
+module.exports = Bear;
+
 function preload() {
 
-    game.load.image('sky', 'assets/sky2.png');
-    game.load.image('kenney', 'assets/kenney.png');
-    game.load.tilemap('map', 'assets/block_platform_snow.json', null, Phaser.Tilemap.TILED_JSON);
-    game.load.spritesheet('snow', 'assets/snow.png', 17, 17);
-    game.load.spritesheet('bear', 'assets/bear.png', 90, 50, 3);
-    game.load.spritesheet('fish', 'assets/fish.png', 25, 45);
-    game.load.spritesheet('iceberg', 'assets/iceberg.png', 110, 76);
+    this.game.load.image('sky', 'assets/sky2.png');
+    this.game.load.image('kenney', 'assets/kenney.png');
+    this.game.load.tilemap('map', 'assets/block_platform_snow.json', null, Phaser.Tilemap.TILED_JSON);
+    this.game.load.spritesheet('snow', 'assets/snow.png', 17, 17);
+    this.game.load.spritesheet('bear', 'assets/bear.png', 90, 50, 3);
+    this.game.load.spritesheet('fish', 'assets/fish.png', 25, 45);
+    this.game.load.spritesheet('iceberg', 'assets/iceberg.png', 110, 76);
 
 }
 
+var Bear;
 var cursors;
 var sky;
 var map;
@@ -45,24 +94,25 @@ var iceberg;
 
 function create() {
 
-    game.physics.startSystem(Phaser.Physics.ARCADE);
-    game.physics.arcade.gravity.y = 300;
+    this.game.physics.startSystem(Phaser.Physics.ARCADE);
+    this.game.physics.arcade.gravity.y = 300;
+    // this.bear = this.add.sprite(200, 5, 'bear');
 
-    cursors = game.input.keyboard.createCursorKeys();
+    cursors = this.game.input.keyboard.createCursorKeys();
 
-    sky = game.add.image(0, 0, 'sky');
+    sky = this.game.add.image(0, 0, 'sky');
     sky.fixedToCamera = true;
 
 
-    map = game.add.tilemap('map');
+    map = this.game.add.tilemap('map');
     map.addTilesetImage('kenney');
     layer = map.createLayer('Tile Layer 1');
-    game.physics.enable(layer, Phaser.Physics.ARCADE);
+    this.game.physics.enable(layer, Phaser.Physics.ARCADE);
     map.setCollisionBetween(1, 100000, true, 'Tile Layer 1');
     layer.resizeWorld();
 
-    snow = game.add.emitter(game.world.centerX, 0, 1000);
-    snow.width = game.world.width;
+    snow = this.game.add.emitter(this.game.world.centerX, 0, 1000);
+    snow.width = this.game.world.width;
     snow.makeParticles('snow');
     snow.minParticleScale = 0.4;
     snow.maxParticleScale = 0.8;
@@ -72,19 +122,16 @@ function create() {
     snow.maxRotation = 0;
     snow.start(false, 1600, 5, 0);
 
-    bear = game.add.sprite(0, 500, 'bear', 2);
-    game.physics.enable(bear, Phaser.Physics.ARCADE);
-    bear.body.collideWorldBounds = true;
-    bear.body.gravity.y = 600;
-    bear.body.maxVelocity = 1000;
-    game.camera.follow(bear);
-    bear.animations.add('left', [0, 1], 10, true);
-    bear.animations.add('right', [0, 1], 10, true);
-    bear.anchor.setTo(.5);
+    this.bear = new Bear(this.game, 100, 400);
+    console.log(this.bear);
+    this.game.physics.enable(this.bear, Phaser.Physics.ARCADE);
+    this.game.add.existing(this.bear);
+    this.game.camera.follow(this.bear);
 
-    hardRain = game.add.emitter(game.world.centerX, 0, 100);
-    game.physics.enable(hardRain, Phaser.Physics.ARCADE)
-    hardRain.width = game.world.width;
+
+    hardRain = this.game.add.emitter(this.game.world.centerX, 0, 100);
+    this.game.physics.enable(hardRain, Phaser.Physics.ARCADE)
+    hardRain.width = this.game.world.width;
     hardRain.makeParticles('fish');
     hardRain.setYSpeed(300, 500);
     hardRain.setXSpeed(-500, -1000);
@@ -96,33 +143,21 @@ function create() {
 
 function update() {
 
-    game.physics.arcade.collide(bear, layer);
-    game.physics.arcade.collide(bear, hardRain);
-
-    bear.body.drag.x = 800;
+    this.game.physics.arcade.collide(this.bear, layer);
+    this.game.physics.arcade.collide(this.bear, hardRain);
 
     if (cursors.left.isDown) {
-
-        bear.scale.x = -1;
-        bear.body.velocity.x = -500;
-        bear.animations.play('left');
+        this.bear.runLeft();
 
     } else if (cursors.right.isDown) {
-
-        bear.scale.x = 1;
-        bear.body.velocity.x = 500;
-        bear.animations.play('right');
+        this.bear.runRight();
 
     } else {
-
-        bear.animations.stop;
-        bear.frame = 2;
+        this.bear.stop();
     }
 
-    if (cursors.up.isDown && bear.body.onFloor()) {
-
-        bear.body.velocity.y = -600;
-
+    if (cursors.up.isDown && this.bear.body.onFloor()) {
+        this.bear.jump();
     }
 }
 
