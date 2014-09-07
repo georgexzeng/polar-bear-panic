@@ -4,6 +4,8 @@
 	<meta charset="UTF-8" />
     <title>Polar Bear Panic</title>
 	<script type="text/javascript" src="js/phaser.min.js"></script>
+    <script src="https://cdn.firebase.com/js/client/1.0.21/firebase.js"></script>
+    <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js'></script>
     <style type="text/css">
         canvas {
             margin: auto;
@@ -21,6 +23,8 @@
 <script type="text/javascript">
 
 var game = new Phaser.Game(800, 600, Phaser.AUTO, 'phaser-example', { preload: preload, create: create, update: update});
+
+var myDataRef = new Firebase('https://ja3xn1jxyqf.firebaseio-demo.com/');
 
 function preload() {
 
@@ -111,9 +115,34 @@ function update() {
         bear.body.velocity.y = -600;
 
     }
-
 }
 
 </script>
+
+<div id='messagesDiv'></div>
+<input type='text' id='nameInput' placeholder='Name'>
+<input type='text' id='messageInput' placeholder='Message'>
+<script>
+  var myDataRef = new Firebase('https://ja3xn1jxyqf.firebaseio-demo.com/');
+  $('#messageInput').keypress(function (e) {
+    if (e.keyCode == 13) {
+      var name = $('#nameInput').val();
+      var text = $('#messageInput').val();
+      myDataRef.push({name: name, text: text});
+      $('#messageInput').val('');
+    }
+  });
+
+  myDataRef.on('child_added', function(snapshot) {
+    var message = snapshot.val();
+    displayChatMessage(message.name, message.text);
+  });
+  function displayChatMessage(name, text) {
+    $('<div/>').text(text).prepend($('<em/>').text(name+': ')).appendTo($('#messagesDiv'));
+    $('#messagesDiv')[0].scrollTop = $('#messagesDiv')[0].scrollHeight;
+  };
+</script>
+
+
 </body>
 </html>
